@@ -78,13 +78,45 @@ class Piece():
 
 class Knight(Piece):
     char = "N"
-    def legal_moves():
-        pass
+    def legal_moves(self, board):
+        offsets = [(2, 1), (1, 2), (-1, 2), (1, -2), (-1, -2), (-2, -1), (-2, 1), (2, -1)]
+        row, col = self.position
+        moves = []
+        # dr = delta row , dc = detla column 
+        for dr, dc in offsets:
+            new_row = row + dr 
+            new_col = col + dc
+
+            if 0 <= new_row <= 7 and 0 <= new_col <=7:
+                target = board[new_row][new_col]
+                if target is None or target.color != self.color:
+                    moves.append((new_row, new_col)) 
+        return moves
+
+
+        
 
 class Rook(Piece):
     char = "R"
-    def legal_moves():
-        pass
+    def legal_moves(self, board):
+        row, col = self.position
+        directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+        moves = []
+        for dr, dc in directions:
+            new_row = row + dr
+            new_col = col + dc
+            while 0 <= new_row <= 7 and 0 <= new_col <= 7:
+                target = board[new_row][new_col]
+
+                if target is None:
+                    moves.append((new_row, new_col))
+                    new_row += dr
+                    new_col += dc
+                else:
+                    if target.color != self.color:
+                        moves.append((new_row, new_col)) 
+                    break
+        return moves
 
 class Bishop(Piece):
     char = "B"
@@ -93,8 +125,21 @@ class Bishop(Piece):
 
 class King(Piece):
     char = "K"
-    def legal_moves():
-        pass
+    def legal_moves(self, board):
+        offsets = [(1, 0), (0, 1), (-1, 0), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1)]
+        row, col = self.position
+        moves = []
+        #delta row delta col
+        for dr, dc in offsets:
+            new_row = row + dr
+            new_col = col + dc
+
+            if 0 <= new_row <= 7 and 0 <= new_col <= 7:
+                target = board[new_row][new_col]
+                if target is None or target.color != self.color:
+                     moves.append((new_row, new_col)) 
+        return moves
+
 
 class Queen(Piece):
     char = "Q"
@@ -111,4 +156,11 @@ class Pawn(Piece):
 
 if __name__ == "__main__":
     game = Chess()
+    rook = game.grid[4][4] = Rook("w", (4,4))
+    print(rook.legal_moves(game.grid))
+    game = Chess()
     game.run()
+    
+
+
+
