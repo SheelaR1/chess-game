@@ -22,9 +22,6 @@ class Chess():
             self.draw_pieces()
             pygame.display.flip()
             self.clock.tick(60)
-
-        
-
         pygame.quit()
 
     def draw_board(self):
@@ -61,9 +58,6 @@ class Chess():
                     image= pygame.transform.smoothscale(image, (100, 100))
                     self.screen.blit(image, (col * 100, row * 100))
             
-            
-    
-
     def special_moves():
         pass
 
@@ -71,7 +65,6 @@ class Piece():
     def __init__(self, color, position):
         self.color = color
         self.position = position
-
 
     def legal_moves(self):
         pass
@@ -92,9 +85,6 @@ class Knight(Piece):
                 if target is None or target.color != self.color:
                     moves.append((new_row, new_col)) 
         return moves
-
-
-        
 
 class Rook(Piece):
     char = "R"
@@ -120,8 +110,26 @@ class Rook(Piece):
 
 class Bishop(Piece):
     char = "B"
-    def legal_moves():
-        pass
+    def legal_moves(self, board):
+        row, col = self.position 
+        directions = [(1, 1), (1, -1), (-1, 1), (-1, -1)]
+        moves = []
+        for dr, dc in directions:
+            new_row = row + dr
+            new_col = col + dc
+            while 0 <= new_row <= 7 and 0 <= new_col <= 7: 
+                target = board[new_row][new_col]
+
+                if target is None:
+                    moves.append((new_row, new_col))
+                    new_row += dr
+                    new_col += dc
+                else:
+                    if target.color != self.color:
+                        moves.append((new_row, new_col))
+                    break 
+        return moves
+
 
 class King(Piece):
     char = "K"
@@ -143,21 +151,54 @@ class King(Piece):
 
 class Queen(Piece):
     char = "Q"
-    def legal_moves():
-        pass
+    def legal_moves(self, board):
+        row, col = self.position
+        directions = [(1, 1), (1, -1), (-1, 1), (-1, -1), (1, 0), (-1, 0), (0, 1), (0, -1)]
+        moves = []
+        for dr, dc in directions: 
+            new_row = row + dr 
+            new_col = col + dc
+            while 0 <= new_row <= 7 and 0 <= new_col <= 7:
+                target = board[new_row][new_col]
 
+                if target is None:
+                    moves.append((new_row, new_col))
+                    new_row += dr
+                    new_col += dc
+                else:
+                    if target.color != self.color:
+                        moves.append((new_row, new_col))
+                    break 
+        return moves
+
+                
 class Pawn(Piece):
     char = "P"
-    def legal_moves():
-        pass
-
-
-
+    def legal_moves(self, board):
+        row, col = self.position
+        moves = []
+        if self.color == "w":
+            direction = -1
+        else:
+            direction = 1
+        new_row = row + direction
+        new_col = col 
+        if 0 <= new_row <= 7 and 0 <= new_col <= 7:
+            target = board[new_row][new_col]
+            if target is None:
+                moves.append((new_row, new_col)) 
+        # left - 1 , right + 1
+        captures = [-1, 1]
+        for offsets in captures:
+            new_row = row + direction
+            new_col = col + offsets
+            if 0 <= new_row <= 7 and 0 <= new_col <= 7:
+                target = board[new_row][new_col]
+                if target is not None and target.color != self.color:
+                    moves.append((new_row, new_col))
+        return moves     
 
 if __name__ == "__main__":
-    game = Chess()
-    rook = game.grid[4][4] = Rook("w", (4,4))
-    print(rook.legal_moves(game.grid))
     game = Chess()
     game.run()
     
