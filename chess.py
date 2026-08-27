@@ -10,16 +10,34 @@ class Chess():
         pygame.display.set_caption("Chess Game")
         self.clock = pygame.time.Clock()
         self.board_setup()
+        self.selected = None
 
     def run(self):
         running = True 
         while running: 
-            for event in pygame.event.get():
+            for event in pygame.event.get():    
                 if event.type == pygame.QUIT:
                     running = False     
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    x, y = event.pos
+                    col = x // 100
+                    row = y // 100
+                    if self.selected is None: 
+                        if self.grid[row][col] is not None:
+                            self.selected = (row,col) 
+                    else:
+                        old_row, old_col = self.selected
+                        piece = self.grid[old_row][old_col]
+                        moves = piece.legal_moves(self.grid)
+                        if (row,col) in moves:
+                            self.grid[row][col] = piece
+                            self.grid [old_row][old_col] = None 
+                            piece.position = row,col
+                        self.selected = None            
             self.screen.fill((0,0,0))
             self.draw_board()
             self.draw_pieces()
+            self.draw_selected()
             pygame.display.flip()
             self.clock.tick(60)
         pygame.quit()
@@ -34,7 +52,7 @@ class Chess():
                 else:
                     color = (120, 80, 60)
                 pygame.draw.rect(self.screen, color, (x, y, 100, 100))
-
+            
     def board_setup(self):
         grid = [[None for _ in range(8)] for _ in range(8)] 
         self.grid = grid
@@ -46,8 +64,6 @@ class Chess():
             self.grid[0][col] = back_row[col]("b", (0, col))
             self.grid[7][col] = back_row[col]("w", (7, col))
         
-        
-
     def draw_pieces(self):
         for row in range(8):
             for col in range(8):
@@ -57,6 +73,13 @@ class Chess():
                     image= pygame.image.load(image)
                     image= pygame.transform.smoothscale(image, (100, 100))
                     self.screen.blit(image, (col * 100, row * 100))
+
+    def draw_selected(self):
+        if self.selected is not None:
+            tint = pygame.Surface((100, 100), pygame.SRCALPHA)
+            tint.fill((95, 160, 173, 150))
+            row, col = self.selected
+            self.screen.blit(tint, (col * 100, row * 100))
             
     def special_moves():
         pass
