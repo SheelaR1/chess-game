@@ -11,6 +11,7 @@ class Chess():
         self.clock = pygame.time.Clock()
         self.board_setup()
         self.selected = None
+        self.turn = "w"
 
     def run(self):
         running = True 
@@ -23,7 +24,7 @@ class Chess():
                     col = x // 100
                     row = y // 100
                     if self.selected is None: 
-                        if self.grid[row][col] is not None:
+                        if self.grid[row][col] is not None and self.grid[row][col].color == self.turn:                                
                             self.selected = (row,col) 
                     else:
                         old_row, old_col = self.selected
@@ -33,6 +34,7 @@ class Chess():
                             self.grid[row][col] = piece
                             self.grid [old_row][old_col] = None 
                             piece.position = row,col
+                            self.turn = "b" if self.turn == "w" else "w"
                         self.selected = None            
             self.screen.fill((0,0,0))
             self.draw_board()
@@ -202,14 +204,18 @@ class Pawn(Piece):
         moves = []
         if self.color == "w":
             direction = -1
+            start_row = 6
         else:
             direction = 1
+            start_row = 1
         new_row = row + direction
         new_col = col 
         if 0 <= new_row <= 7 and 0 <= new_col <= 7:
             target = board[new_row][new_col]
             if target is None:
                 moves.append((new_row, new_col)) 
+                if row == start_row and board[row + 2 * direction][col] is None:
+                    moves.append((row + 2 * direction, col))
         # left - 1 , right + 1
         captures = [-1, 1]
         for offsets in captures:
