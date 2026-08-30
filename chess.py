@@ -82,6 +82,31 @@ class Chess():
             tint.fill((95, 160, 173, 150))
             row, col = self.selected
             self.screen.blit(tint, (col * 100, row * 100))
+
+    def find_king(self, color):
+        for row in range(8):
+            for col in range(8):
+                piece = self.grid[row][col]
+                if piece is not None and piece.char == "K" and piece.color == color:
+                    return (row, col)
+
+    def under_attack (self, square, by_color):
+        for row in range(8):
+            for col in range(8):
+                piece = self.grid [row][col]
+                if piece is None or piece.color != by_color:
+                    continue
+                moves = piece.legal_moves(self.grid)
+                if square in moves:
+                    return True
+        return False
+                  
+    def in_check(self, color):
+        king_square = self.find_king(color)
+        enemy = "b" if color == "w" else "w"
+        return self.under_attack(king_square, enemy)
+
+
             
     def special_moves():
         pass
@@ -229,6 +254,9 @@ class Pawn(Piece):
 
 if __name__ == "__main__":
     game = Chess()
+    game.grid[1][4] = None                          # clear a black pawn
+    game.grid[1][4] = Rook("w", (1, 4))             # white rook right in front of black king at (0,4)
+    print(game.in_check("b"))                        # expect True — rook attacks the king
     game.run()
     
 
