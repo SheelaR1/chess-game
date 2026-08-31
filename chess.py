@@ -12,7 +12,9 @@ class Chess():
         self.board_setup()
         self.selected = None
         self.turn = "w"
+        self.game_over = None
 
+        
     def run(self):
         running = True 
         while running: 
@@ -35,6 +37,9 @@ class Chess():
                             self.grid [old_row][old_col] = None 
                             piece.position = row,col
                             self.turn = "b" if self.turn == "w" else "w"
+                            self.game_over = self.game_status(self.turn)
+                            if self.game_over is not None:
+                                print(self.game_over)
                         self.selected = None            
             self.screen.fill((0,0,0))
             self.draw_board()
@@ -101,7 +106,6 @@ class Chess():
             for r,c in moves:
                 pygame.draw.circle(self.screen, (133, 131, 129) , (c * 100 + 50, r * 100 + 50), 15)
 
-
     def find_king(self, color):
         for row in range(8):
             for col in range(8):
@@ -147,6 +151,25 @@ class Chess():
                 legal.append(move)
         return legal
 
+    def has_moves(self, color):
+        for row in range(8):
+            for col in range(8):
+                piece = self.grid [row][col]
+                if piece is None or piece.color != color:
+                    continue
+                if self.get_legal_moves(piece):
+                    return True 
+        return False
+
+    def game_status(self, color):
+        if self.has_moves(color):
+            return None
+        else:
+            if self.in_check(color):
+                return "Checkmate"
+            else:
+                return "Stalemate"
+        
     def special_moves():
         pass
 
@@ -219,7 +242,6 @@ class Bishop(Piece):
                     break 
         return moves
 
-
 class King(Piece):
     char = "K"
     def legal_moves(self, board):
@@ -236,7 +258,6 @@ class King(Piece):
                 if target is None or target.color != self.color:
                      moves.append((new_row, new_col)) 
         return moves
-
 
 class Queen(Piece):
     char = "Q"
@@ -259,8 +280,7 @@ class Queen(Piece):
                         moves.append((new_row, new_col))
                     break 
         return moves
-
-                
+             
 class Pawn(Piece):
     char = "P"
     def legal_moves(self, board):
