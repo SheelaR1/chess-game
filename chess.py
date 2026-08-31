@@ -42,6 +42,7 @@ class Chess():
             self.draw_selected()
             self.draw_check("w")
             self.draw_check("b")
+            self.draw_moves()
             pygame.display.flip()
             self.clock.tick(60)
         pygame.quit()
@@ -91,6 +92,14 @@ class Chess():
             tint = pygame.Surface((100, 100), pygame.SRCALPHA) 
             tint.fill((240, 5, 56, 100))
             self.screen.blit(tint, (col * 100, row * 100))
+
+    def draw_moves(self):
+        if self.selected is not None:
+            row, col = self.selected
+            piece = self.grid[row][col]
+            moves = self.get_legal_moves(piece)
+            for r,c in moves:
+                pygame.draw.circle(self.screen, (133, 131, 129) , (c * 100 + 50, r * 100 + 50), 15)
 
 
     def find_king(self, color):
