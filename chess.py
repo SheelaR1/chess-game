@@ -29,7 +29,7 @@ class Chess():
                     else:
                         old_row, old_col = self.selected
                         piece = self.grid[old_row][old_col]
-                        moves = piece.legal_moves(self.grid)
+                        moves = self.get_legal_moves(piece)
                         if (row,col) in moves:
                             self.grid[row][col] = piece
                             self.grid [old_row][old_col] = None 
@@ -40,6 +40,8 @@ class Chess():
             self.draw_board()
             self.draw_pieces()
             self.draw_selected()
+            self.draw_check("w")
+            self.draw_check("b")
             pygame.display.flip()
             self.clock.tick(60)
         pygame.quit()
@@ -83,6 +85,14 @@ class Chess():
             row, col = self.selected
             self.screen.blit(tint, (col * 100, row * 100))
 
+    def draw_check(self, color):
+        if self.in_check(color):
+            row, col = self.find_king(color)
+            tint = pygame.Surface((100, 100), pygame.SRCALPHA) 
+            tint.fill((240, 5, 56, 100))
+            self.screen.blit(tint, (col * 100, row * 100))
+
+
     def find_king(self, color):
         for row in range(8):
             for col in range(8):
@@ -106,8 +116,28 @@ class Chess():
         enemy = "b" if color == "w" else "w"
         return self.under_attack(king_square, enemy)
 
+    def is_king_in_check(self, from_square, to_square, color):
+        # fr = from row , fc = from col
+        fr, fc = from_square
+        # tr = to row, tc = to col
+        tr, tc = to_square
+        fs = self.grid[fr][fc]
+        ts = self.grid[tr][tc]
+        self.grid[tr][tc] = fs 
+        self.grid[fr][fc] = None
+        result = self.in_check(color)
+        self.grid[fr][fc] = fs
+        self.grid[tr][tc] = ts 
+        return result
 
-            
+    def get_legal_moves(self, piece):
+        raw_moves = piece.legal_moves(self.grid)
+        legal = []
+        for move in raw_moves:
+            if self.is_king_in_check(piece.position, move, piece.color) is False:
+                legal.append(move)
+        return legal
+
     def special_moves():
         pass
 
@@ -254,9 +284,6 @@ class Pawn(Piece):
 
 if __name__ == "__main__":
     game = Chess()
-    game.grid[1][4] = None                          # clear a black pawn
-    game.grid[1][4] = Rook("w", (1, 4))             # white rook right in front of black king at (0,4)
-    print(game.in_check("b"))                        # expect True — rook attacks the king
     game.run()
     
 
