@@ -12,8 +12,8 @@ class Chess():
         self.board_setup()
         self.selected = None
         self.turn = "w"
+        self.promoting = None
         self.game_over = None
-
         
     def run(self):
         running = True 
@@ -25,25 +25,46 @@ class Chess():
                     x, y = event.pos
                     col = x // 100
                     row = y // 100
-                    if self.selected is None: 
-                        if self.grid[row][col] is not None and self.grid[row][col].color == self.turn:                                
-                            self.selected = (row,col) 
+                    if self.promoting is not None:
+                        prow, pcol = self.promoting
+                        if prow == 0:
+                            step = 1 
+                        else: 
+                            step = -1
+                        promotions = ["Q", "N", "R", "B"]
+                        for i, letter in enumerate(promotions):
+                            if (row, col) == (prow + i * step, pcol):
+                                piece_map = {"Q": Queen, "R": Rook, "N": Knight, "B": Bishop}
+                                piece_class = piece_map[letter]
+                                self.grid[prow][pcol] = piece_class(self.turn, (prow, pcol))
+                                self.promoting = None
+                                self.turn = "b" if self.turn == "w" else "w"
+                                self.game_over = self.game_status(self.turn)
+                                if self.game_over is not None:
+                                    print(self.game_over)
                     else:
-                        old_row, old_col = self.selected
-                        piece = self.grid[old_row][old_col]
-                        moves = self.get_legal_moves(piece)
-                        if (row,col) in moves:
-                            self.grid[row][col] = piece
-                            self.grid [old_row][old_col] = None 
-                            piece.position = row,col
-                            self.turn = "b" if self.turn == "w" else "w"
-                            self.game_over = self.game_status(self.turn)
-                            if self.game_over is not None:
-                                print(self.game_over)
-                        self.selected = None            
+                        if self.selected is None: 
+                            if self.grid[row][col] is not None and self.grid[row][col].color == self.turn:                                
+                                self.selected = (row,col) 
+                        else:
+                            old_row, old_col = self.selected
+                            piece = self.grid[old_row][old_col]
+                            moves = self.get_legal_moves(piece)
+                            if (row,col) in moves:
+                                self.grid[row][col] = piece
+                                self.grid [old_row][old_col] = None 
+                                piece.position = row,col
+                                self.special_moves(piece, row, col)
+                                if self.promoting is None:
+                                    self.turn = "b" if self.turn == "w" else "w"
+                                    self.game_over = self.game_status(self.turn)
+                                    if self.game_over is not None:
+                                        print(self.game_over)
+                            self.selected = None            
             self.screen.fill((0,0,0))
             self.draw_board()
             self.draw_pieces()
+            self.draw_promotion()
             self.draw_selected()
             self.draw_check("w")
             self.draw_check("b")
@@ -105,6 +126,23 @@ class Chess():
             moves = self.get_legal_moves(piece)
             for r,c in moves:
                 pygame.draw.circle(self.screen, (133, 131, 129) , (c * 100 + 50, r * 100 + 50), 15)
+
+    def draw_promotion(self):
+        if self.promoting is not None:
+            row, col = self.promoting
+            if row == 0:
+                step = 1
+            else: 
+                step = -1
+            pawn_color = self.grid[row][col].color
+            promotions = ["Q", "N", "R", "B"]
+            for i, letter in enumerate(promotions):
+                choice = "images/" + pawn_color + letter + ".png"
+                choice = pygame.image.load(choice)
+                choice= pygame.transform.smoothscale(choice, (100, 100))
+                pygame.draw.rect(self.screen, (50, 50, 50), (col * 100, (row + i * step) * 100, 100, 100))
+                self.screen.blit(choice, (col * 100, (row + i * step) * 100))
+
 
     def find_king(self, color):
         for row in range(8):
@@ -170,8 +208,11 @@ class Chess():
             else:
                 return "Stalemate"
         
-    def special_moves():
-        pass
+    def special_moves(self, piece, row, col):
+        # Promotions
+        if piece.char == "P":
+            if (piece.color == "w" and row == 0) or (piece.color == "b" and row == 7):
+               self.promoting = row, col
 
 class Piece():
     def __init__(self, color, position):
