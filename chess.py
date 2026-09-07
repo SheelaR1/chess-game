@@ -54,6 +54,7 @@ class Chess():
                                 self.grid[row][col] = piece
                                 self.grid [old_row][old_col] = None 
                                 piece.position = row,col
+                                piece.has_moved = True
                                 self.special_moves(piece, row, col)
                                 if self.promoting is None:
                                     self.turn = "b" if self.turn == "w" else "w"
@@ -181,12 +182,39 @@ class Chess():
         self.grid[tr][tc] = ts 
         return result
 
+    def castling_moves(self, king):
+        krow, kcol = king.position
+        moves = []
+        rook = self.grid[krow][7]
+        if (king.has_moved is False
+        and rook is not None
+        and rook.char == "R"
+        and rook.color == king.color
+        and rook.has_moved is False
+        and self.grid[krow][5] is None
+        and self.grid[krow][6] is None):
+            moves.append((krow, 6))
+        qrook = self.grid[krow][0]
+        if (king.has_moved is False
+        and qrook is not None
+        and qrook.char == "R"
+        and qrook.color == king.color
+        and qrook.has_moved is False
+        and self.grid[krow][1] is None
+        and self.grid[krow][2] is None
+        and self.grid[krow][3] is None
+        ):
+            moves.append((krow, 2))
+        return moves
+
     def get_legal_moves(self, piece):
         raw_moves = piece.legal_moves(self.grid)
         legal = []
         for move in raw_moves:
             if self.is_king_in_check(piece.position, move, piece.color) is False:
                 legal.append(move)
+        if piece.char == "K":
+            legal = legal + self.castling_moves(piece)
         return legal
 
     def has_moves(self, color):
@@ -213,11 +241,25 @@ class Chess():
         if piece.char == "P":
             if (piece.color == "w" and row == 0) or (piece.color == "b" and row == 7):
                self.promoting = row, col
+        #Castling
+        if piece.char == "K" and col == 6:
+            rook = self.grid[row][7]
+            self.grid[row][5] = rook 
+            self.grid[row][7] = None
+            rook.position = (row, 5)
+            rook.has_moved = True
+        if piece.char == "K" and col == 2:
+            rook = self.grid[row][0]
+            self.grid[row][3] = rook 
+            self.grid[row][0] = None
+            rook.position = (row, 3)
+            rook.has_moved = True
 
 class Piece():
     def __init__(self, color, position):
         self.color = color
         self.position = position
+        self.has_moved = False
 
     def legal_moves(self):
         pass
@@ -355,7 +397,3 @@ class Pawn(Piece):
 if __name__ == "__main__":
     game = Chess()
     game.run()
-    
-
-
-
