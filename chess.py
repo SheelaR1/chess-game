@@ -13,8 +13,9 @@ class Chess():
         self.selected = None
         self.turn = "w"
         self.promoting = None
+        self.en_passant_target = None
         self.game_over = None
-        
+
     def run(self):
         running = True 
         while running: 
@@ -55,13 +56,18 @@ class Chess():
                                 self.grid [old_row][old_col] = None 
                                 piece.position = row,col
                                 piece.has_moved = True
+                                # En passant logic
+                                if piece.char == "P" and abs(row - old_row) == 2:
+                                    self.en_passant_target = ((old_row + row) // 2, col)
+                                else:
+                                    self.en_passant_target = None
                                 self.special_moves(piece, row, col)
                                 if self.promoting is None:
                                     self.turn = "b" if self.turn == "w" else "w"
                                     self.game_over = self.game_status(self.turn)
                                     if self.game_over is not None:
                                         print(self.game_over)
-                            self.selected = None            
+                            self.selected = None       
             self.screen.fill((0,0,0))
             self.draw_board()
             self.draw_pieces()
@@ -105,7 +111,7 @@ class Chess():
                     image= pygame.image.load(image)
                     image= pygame.transform.smoothscale(image, (100, 100))
                     self.screen.blit(image, (col * 100, row * 100))
-
+                    
     def draw_selected(self):
         if self.selected is not None:
             tint = pygame.Surface((100, 100), pygame.SRCALPHA)
@@ -222,6 +228,13 @@ class Chess():
         for move in raw_moves:
             if self.is_king_in_check(piece.position, move, piece.color) is False:
                 legal.append(move)
+        if piece.char ==  "P" and self.en_passant_target is not None:
+            prow, pcol = piece.position
+            direction = -1 if piece.color == "w" else 1
+            diag_left = (prow + direction, pcol - 1)
+            diag_right = (prow + direction, pcol + 1)
+            if self.en_passant_target == diag_left or self.en_passant_target == diag_right:
+                legal.append(self.en_passant_target)
         if piece.char == "K":
             legal = legal + self.castling_moves(piece)
         return legal
@@ -264,6 +277,10 @@ class Chess():
             self.grid[row][0] = None
             rook.position = (row, 3)
             rook.has_moved = True
+        #En passant
+        if piece.char == "P" and (row, col) == self.en_passant_target:
+            direction = -1 if piece.color is "w" else 1
+            self.grid[row-direction][col] = None
 
 class Piece():
     def __init__(self, color, position):
