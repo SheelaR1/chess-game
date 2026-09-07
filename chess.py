@@ -184,6 +184,8 @@ class Chess():
 
     def castling_moves(self, king):
         krow, kcol = king.position
+        color = king.color
+        enemy = "b" if color == "w" else "w"
         moves = []
         rook = self.grid[krow][7]
         if (king.has_moved is False
@@ -192,7 +194,11 @@ class Chess():
         and rook.color == king.color
         and rook.has_moved is False
         and self.grid[krow][5] is None
-        and self.grid[krow][6] is None):
+        and self.grid[krow][6] is None
+        and not self.in_check(color)
+        and not self.under_attack((krow, 5), enemy)
+        and not self.under_attack((krow, 6), enemy)
+        ):
             moves.append((krow, 6))
         qrook = self.grid[krow][0]
         if (king.has_moved is False
@@ -203,6 +209,9 @@ class Chess():
         and self.grid[krow][1] is None
         and self.grid[krow][2] is None
         and self.grid[krow][3] is None
+        and not self.in_check(color)
+        and not self.under_attack((krow, 2), enemy)
+        and not self.under_attack((krow, 3), enemy)
         ):
             moves.append((krow, 2))
         return moves
@@ -241,13 +250,14 @@ class Chess():
         if piece.char == "P":
             if (piece.color == "w" and row == 0) or (piece.color == "b" and row == 7):
                self.promoting = row, col
-        #Castling
+        #KingSide Castling
         if piece.char == "K" and col == 6:
             rook = self.grid[row][7]
             self.grid[row][5] = rook 
             self.grid[row][7] = None
             rook.position = (row, 5)
             rook.has_moved = True
+        #QueenSide Castling
         if piece.char == "K" and col == 2:
             rook = self.grid[row][0]
             self.grid[row][3] = rook 
