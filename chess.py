@@ -56,12 +56,12 @@ class Chess():
                                 self.grid [old_row][old_col] = None 
                                 piece.position = row,col
                                 piece.has_moved = True
+                                self.special_moves(piece, row, col, old_col)
                                 # En passant logic
                                 if piece.char == "P" and abs(row - old_row) == 2:
                                     self.en_passant_target = ((old_row + row) // 2, col)
                                 else:
                                     self.en_passant_target = None
-                                self.special_moves(piece, row, col)
                                 if self.promoting is None:
                                     self.turn = "b" if self.turn == "w" else "w"
                                     self.game_over = self.game_status(self.turn)
@@ -111,7 +111,7 @@ class Chess():
                     image= pygame.image.load(image)
                     image= pygame.transform.smoothscale(image, (100, 100))
                     self.screen.blit(image, (col * 100, row * 100))
-                    
+
     def draw_selected(self):
         if self.selected is not None:
             tint = pygame.Surface((100, 100), pygame.SRCALPHA)
@@ -258,20 +258,20 @@ class Chess():
             else:
                 return "Stalemate"
         
-    def special_moves(self, piece, row, col):
+    def special_moves(self, piece, row, col, old_col):
         # Promotions
         if piece.char == "P":
             if (piece.color == "w" and row == 0) or (piece.color == "b" and row == 7):
                self.promoting = row, col
         #KingSide Castling
-        if piece.char == "K" and col == 6:
+        if piece.char == "K" and abs(col - old_col) == 2 and col == 6:
             rook = self.grid[row][7]
             self.grid[row][5] = rook 
             self.grid[row][7] = None
             rook.position = (row, 5)
             rook.has_moved = True
         #QueenSide Castling
-        if piece.char == "K" and col == 2:
+        if piece.char == "K" and abs(col - old_col) == 2 and col == 2:
             rook = self.grid[row][0]
             self.grid[row][3] = rook 
             self.grid[row][0] = None
@@ -279,7 +279,7 @@ class Chess():
             rook.has_moved = True
         #En passant
         if piece.char == "P" and (row, col) == self.en_passant_target:
-            direction = -1 if piece.color is "w" else 1
+            direction = -1 if piece.color == "w" else 1
             self.grid[row-direction][col] = None
 
 class Piece():
