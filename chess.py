@@ -1,5 +1,6 @@
 import pygame
 import sys
+import random
 
 class Chess():
     def __init__(self):
@@ -9,11 +10,13 @@ class Chess():
         self.screen = pygame.display.set_mode((width, height))
         pygame.display.set_caption("Chess Game")
         self.clock = pygame.time.Clock()
+        self.font = pygame.font.SysFont(None, 40)
         self.board_setup()
         self.selected = None
         self.turn = "w"
         self.promoting = None
         self.en_passant_target = None
+        self.minigame = None
         self.game_over = None
 
     def run(self):
@@ -26,7 +29,9 @@ class Chess():
                     x, y = event.pos
                     col = x // 100
                     row = y // 100
-                    if self.promoting is not None:
+                    if self.minigame is not None:
+                        self.minigame.handle_click((x,y))
+                    elif self.promoting is not None:
                         prow, pcol = self.promoting
                         if prow == 0:
                             step = 1 
@@ -52,26 +57,58 @@ class Chess():
                             piece = self.grid[old_row][old_col]
                             moves = self.get_legal_moves(piece)
                             if (row,col) in moves:
-                                self.grid[row][col] = piece
-                                self.grid [old_row][old_col] = None 
-                                piece.position = row,col
-                                piece.has_moved = True
-                                self.special_moves(piece, row, col, old_col)
-                                # En passant logic
-                                if piece.char == "P" and abs(row - old_row) == 2:
-                                    self.en_passant_target = ((old_row + row) // 2, col)
+                                if self.grid[row][col] is not None:
+                                    self.minigame = RPS((old_row, old_col), (row, col))
                                 else:
-                                    self.en_passant_target = None
-                                if self.promoting is None:
-                                    self.turn = "b" if self.turn == "w" else "w"
-                                    self.game_over = self.game_status(self.turn)
-                                    if self.game_over is not None:
-                                        print(self.game_over)
-                            self.selected = None       
+                                    self.grid[row][col] = piece
+                                    self.grid [old_row][old_col] = None 
+                                    piece.position = row,col
+                                    piece.has_moved = True
+                                    self.special_moves(piece, row, col, old_col)
+                                    # En passant logic
+                                    if piece.char == "P" and abs(row - old_row) == 2:
+                                        self.en_passant_target = ((old_row + row) // 2, col)
+                                    else:
+                                        self.en_passant_target = None
+                                    if self.promoting is None:
+                                        self.turn = "b" if self.turn == "w" else "w"
+                                        self.game_over = self.game_status(self.turn)
+                                        if self.game_over is not None:
+                                            print(self.game_over)
+                            self.selected = None
+                    # Mingame handling
+                    if self.minigame is not None and self.minigame.result is not None:
+                        if self.minigame.result == "win":
+                            # Get the squares 
+                            from_square = self.minigame.from_square
+                            to_square = self.minigame.to_square
+                            old_row, old_col = from_square
+                            row, col = to_square
+                            #Piece captures
+                            piece = self.grid[old_row][old_col]
+                            self.grid[row][col] = piece
+                            self.grid[old_row][old_col] = None
+                            piece.position = (row, col)
+                            piece.has_moved = True
+                            #Turn
+                            self.turn = "b" if self.turn == "w" else "w"
+                            self.game_over = self.game_status(self.turn)
+                            if self.game_over is not None:
+                                print(self.game_over)
+                            self.minigame = None
+                        elif self.minigame.result == "lose":
+                            self.turn = "b" if self.turn == "w" else "w"
+                            self.minigame = None
+                        else:
+                            self.minigame.player_choice = None
+                            self.minigame.computer_choice = None
+                            self.minigame.result = None
             self.screen.fill((0,0,0))
             self.draw_board()
             self.draw_pieces()
             self.draw_promotion()
+            if self.minigame is not None:
+                self.minigame.draw(self.screen, self.font)            
             self.draw_selected()
             self.draw_check("w")
             self.draw_check("b")
@@ -149,7 +186,6 @@ class Chess():
                 choice= pygame.transform.smoothscale(choice, (100, 100))
                 pygame.draw.rect(self.screen, (50, 50, 50), (col * 100, (row + i * step) * 100, 100, 100))
                 self.screen.blit(choice, (col * 100, (row + i * step) * 100))
-
 
     def find_king(self, color):
         for row in range(8):
@@ -420,6 +456,58 @@ class Pawn(Piece):
                 if target is not None and target.color != self.color:
                     moves.append((new_row, new_col))
         return moves     
+
+
+# Rock Paper Scissors
+class RPS():
+
+    def __init__(self, from_square, to_square):
+        self.from_square = from_square
+        self.to_square = to_square
+        self.player_choice = None
+        self.computer_choice = None
+        self.result = None
+
+    def draw(self, screen, font):
+        pygame.draw.rect(screen, (30, 30, 30), (0, 0, 800, 800))
+        # Rock 
+        pygame.draw.rect(screen, (128, 128, 128), (100, 350, 100, 100))
+        rock = font.render("Rock", True, (0, 0, 0))
+        screen.blit(rock, (115, 385))
+        # Paper
+        pygame.draw.rect(screen, (240, 240, 240), (350, 350, 100, 100))
+        paper = font.render("Paper", True, (0, 0, 0))
+        screen.blit(paper, (360, 385))
+        # Scissors
+        pygame.draw.rect(screen, (200, 50, 50), (600, 350, 120, 100))
+        scissors = font.render("Scissors", True, (0, 0, 0))
+        screen.blit(scissors, (600, 385))
+
+    def handle_click(self, pos):
+        x, y = pos 
+        # Safe guarding against multiple clicks
+        if self.result is not None:
+            return
+        # Choice handler
+        if 100 <= x <= 200 and 350 <= y <= 450:
+            self.player_choice = "rock"
+            clicked = True
+        elif 350 <= x <= 450 and 350 <= y <= 450:
+            self.player_choice = "paper"
+            clicked = True
+        elif 600 <= x <= 720 and 350 <= y <= 450:
+            self.player_choice = "scissors"
+            clicked = True
+        if clicked:
+            self.computer_choice = random.choice(["rock", "paper", "scissors"])
+            beats = {"rock": "scissors", "paper": "rock", "scissors": "paper"}
+            if self.player_choice == self.computer_choice:
+                self.result = "tie"
+            elif beats[self.player_choice] == self.computer_choice:
+                self.result = "win"
+            else:
+                self.result = "lose"
+            print(self.result)
 
 if __name__ == "__main__":
     game = Chess()
