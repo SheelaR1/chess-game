@@ -51,3 +51,29 @@ class RPS():
             else:
                 self.result = "lose"
             print(self.result)
+
+# BlackJack
+class BJ():
+
+    def __init__(self):
+        pass
+
+    def draw(self, screen, ):
+        # Draw a hit button 
+
+        # Draw a stand button
+
+        # Animate 2 cards being drawn for your hand
+
+        # Draw a card for the dealer one face one shown to the player
+        pass
+
+    def handle_click(self, pos):
+        # safeguard against mutiple clicks
+
+        # unpack positon of x, y 
+        # if player clicks hit make the computer deal another card and see if its 21 or less
+        # if it more than 21 lose the game
+        # if not and player stands and compares to computer 
+
+        pass
