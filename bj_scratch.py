@@ -27,6 +27,24 @@ def hand_value(hand):
         aces -= 1
     return total
 
+class BJ():
 
-        
+    def __init__(self):
+        self.new_round()
+
+    def new_round(self):
+        self.deck = build_deck()
+        self.player_hand = [self.deck.pop(), self.deck.pop()]
+        self.dealer_hand = [self.deck.pop(), self.deck.pop()]
+        self.round_over = False
+        self.result = None
+
+    def draw(self,screen):
+        pass
+
+if __name__ == "__main__":
+    game = BJ()
+    print(game.player_hand, hand_value(game.player_hand))
+    print(game.dealer_hand, hand_value(game.dealer_hand))
+    print(len(game.deck))
             
