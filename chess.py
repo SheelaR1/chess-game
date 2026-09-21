@@ -2,7 +2,7 @@ import pygame
 import sys
 import random
 from pieces import Piece, Knight, Rook, Bishop, King, Queen, Pawn   
-from minigames import RPS
+from minigames import RPS, BJ
 
 class Chess():
     def __init__(self):
@@ -60,7 +60,7 @@ class Chess():
                             moves = self.get_legal_moves(piece)
                             if (row,col) in moves:
                                 if self.grid[row][col] is not None:
-                                    self.minigame = RPS((old_row, old_col), (row, col))
+                                    self.minigame = random.choice([RPS, BJ])((old_row, old_col), (row, col))
                                 else:
                                     self.grid[row][col] = piece
                                     self.grid [old_row][old_col] = None 
