@@ -37,8 +37,8 @@ python main.py
 - [x] Chess engine with full rules
 - [x] Rock Paper Scissors minigame
 - [x] Blackjack minigame
-- [ ] Connect Four minigame
+- [ ] AI opponent
 - [ ] Result screen after each minigame
 - [ ] Draw rules (insufficient material, threefold repetition, fifty-move rule)
-- [ ] AI opponent
 - [ ] Online multiplayer
+- [ ] Connect Four minigame

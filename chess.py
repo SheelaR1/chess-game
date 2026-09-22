@@ -20,6 +20,10 @@ class Chess():
         self.en_passant_target = None
         self.minigame = None
         self.game_over = None
+        self.player_color = None
+        self.ai_color = None
+        self.white_button = pygame.Rect(200, 350, 150, 100)
+        self.black_button = pygame.Rect(450, 350, 150, 100)
 
     def run(self):
         running = True 
@@ -31,7 +35,16 @@ class Chess():
                     x, y = event.pos
                     col = x // 100
                     row = y // 100
-                    if self.minigame is not None:
+                    # Choose starting side
+                    if self.player_color is None:
+                        if self.white_button.collidepoint((x,y)):
+                            self.player_color = "w"
+                            self.ai_color = "b"
+                        elif self.black_button.collidepoint((x,y)):
+                            self.player_color = "b"
+                            self.ai_color = "w"
+                    #Minigame handling
+                    elif self.minigame is not None:
                         self.minigame.handle_click((x,y))
                     elif self.promoting is not None:
                         prow, pcol = self.promoting
@@ -115,6 +128,9 @@ class Chess():
             self.draw_check("w")
             self.draw_check("b")
             self.draw_moves()
+            # Color Selection
+            if self.player_color is None:
+                self.draw_color_select()
             pygame.display.flip()
             self.clock.tick(60)
         pygame.quit()
@@ -188,6 +204,20 @@ class Chess():
                 choice= pygame.transform.smoothscale(choice, (100, 100))
                 pygame.draw.rect(self.screen, (50, 50, 50), (col * 100, (row + i * step) * 100, 100, 100))
                 self.screen.blit(choice, (col * 100, (row + i * step) * 100))
+
+    #Display side selection
+    def draw_color_select(self):
+        self.screen.fill((30, 30, 30), (0, 0, 800, 800))
+        #White button
+        pygame.draw.rect(self.screen, (247, 242, 242), self.white_button)
+        white = self.font.render("White", True, (48, 46, 46))
+        white_rect = white.get_rect(center=self.white_button.center)
+        self.screen.blit(white, white_rect)
+        #Black button 
+        pygame.draw.rect(self.screen, (48, 46, 46), self.black_button)
+        black = self.font.render("Black", True, (247, 242, 242))
+        black_rect = black.get_rect(center=self.black_button.center)
+        self.screen.blit(black, black_rect)
 
     def find_king(self, color):
         for row in range(8):
