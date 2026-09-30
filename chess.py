@@ -3,6 +3,7 @@ import sys
 import random
 from pieces import Piece, Knight, Rook, Bishop, King, Queen, Pawn   
 from minigames import RPS, BJ
+from ai import random_moves
 
 class Chess():
     def __init__(self):
@@ -118,6 +119,13 @@ class Chess():
                             self.minigame.player_choice = None
                             self.minigame.computer_choice = None
                             self.minigame.result = None
+            if (self.player_color is not None  
+                and self.turn == self.ai_color 
+                and self.minigame is None
+                and self.promoting is None
+                and self.game_over is None
+                ):
+                self.make_ai_move()
             self.screen.fill((0,0,0))
             self.draw_board()
             self.draw_pieces()
@@ -306,6 +314,33 @@ class Chess():
         if piece.char == "K":
             legal = legal + self.castling_moves(piece)
         return legal
+
+    # Computer movement
+    def make_ai_move(self):
+        move = random_moves(self, self.ai_color) 
+        if move is None:
+            return
+        from_square, to_square = move
+        old_row, old_col = from_square 
+        row, col = to_square
+        piece = self.grid[old_row][old_col]
+        if self.grid[row][col] is not None:
+            self.minigame = random.choice([RPS, BJ])((old_row, old_col), (row, col))
+            return
+        self.grid[row][col] = piece
+        self.grid[old_row][old_col] = None
+        piece.position = (row, col)
+        piece.has_moved = True
+        self.special_moves(piece, row, col, old_col)
+        if piece.char == "P" and abs(row - old_row) == 2:
+            self.en_passant_target = ((old_row + row) // 2, col)
+        else:
+            self.en_passant_target = None
+        if self.promoting is None:
+            self.turn = "b" if self.turn == "w" else "w"
+            self.game_over = self.game_status(self.turn)
+            if self.game_over is not None:
+                print(self.game_over)
 
     def has_moves(self, color):
         for row in range(8):
