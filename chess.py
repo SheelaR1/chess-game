@@ -3,7 +3,7 @@ import sys
 import random
 from pieces import Piece, Knight, Rook, Bishop, King, Queen, Pawn   
 from minigames import RPS, BJ
-from ai import random_moves
+from ai import random_moves, greedy_move
 
 class Chess():
     def __init__(self):
@@ -94,31 +94,35 @@ class Chess():
                             self.selected = None
                     # Mingame handling
                     if self.minigame is not None and self.minigame.result is not None:
-                        if self.minigame.result == "win":
+                        if self.minigame.result == "tie":
+                            self.minigame.player_choice = None
+                            self.minigame.computer_choice = None
+                            self.minigame.result = None
                             # Get the squares 
+                        else:
                             from_square = self.minigame.from_square
                             to_square = self.minigame.to_square
                             old_row, old_col = from_square
                             row, col = to_square
                             #Piece captures
-                            piece = self.grid[old_row][old_col]
-                            self.grid[row][col] = piece
-                            self.grid[old_row][old_col] = None
-                            piece.position = (row, col)
-                            piece.has_moved = True
+                            attacking_piece = self.grid[old_row][old_col]
+                            if attacking_piece.color == self.ai_color:
+                                capture_succeeds = self.minigame.result == "lose"
+                            else:
+                                capture_succeeds = self.minigame.result == "win"
+                            if capture_succeeds:
+                                piece = self.grid[old_row][old_col]
+                                self.grid[row][col] = piece
+                                self.grid[old_row][old_col] = None
+                                piece.position = (row, col)
+                                piece.has_moved = True
                             #Turn
                             self.turn = "b" if self.turn == "w" else "w"
                             self.game_over = self.game_status(self.turn)
                             if self.game_over is not None:
                                 print(self.game_over)
                             self.minigame = None
-                        elif self.minigame.result == "lose":
-                            self.turn = "b" if self.turn == "w" else "w"
-                            self.minigame = None
-                        else:
-                            self.minigame.player_choice = None
-                            self.minigame.computer_choice = None
-                            self.minigame.result = None
+            
             if (self.player_color is not None  
                 and self.turn == self.ai_color 
                 and self.minigame is None
@@ -317,7 +321,7 @@ class Chess():
 
     # Computer movement
     def make_ai_move(self):
-        move = random_moves(self, self.ai_color) 
+        move = greedy_move(self, self.ai_color) 
         if move is None:
             return
         from_square, to_square = move
