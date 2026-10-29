@@ -3,7 +3,7 @@ import sys
 import random
 from pieces import Piece, Knight, Rook, Bishop, King, Queen, Pawn   
 from minigames import RPS, BJ
-from ai import random_moves, greedy_move
+from ai import random_moves, greedy_move, evaluate , make_move, undo_move
 
 class Chess():
     def __init__(self):
