@@ -3,7 +3,7 @@ import sys
 import random
 from pieces import Piece, Knight, Rook, Bishop, King, Queen, Pawn   
 from minigames import RPS, BJ
-from ai import random_moves, greedy_move, evaluate , make_move, undo_move
+from ai import random_moves, greedy_move, evaluate , make_move, undo_move, minimax_move
 
 class Chess():
     def __init__(self):
@@ -116,11 +116,16 @@ class Chess():
                                 self.grid[old_row][old_col] = None
                                 piece.position = (row, col)
                                 piece.has_moved = True
-                            #Turn
-                            self.turn = "b" if self.turn == "w" else "w"
-                            self.game_over = self.game_status(self.turn)
-                            if self.game_over is not None:
+                            # Failed captures while in check end the game(bug fix)
+                            if not capture_succeeds and self.in_check(attacking_piece.color):
+                                self.game_over = "Checkmate"
                                 print(self.game_over)
+                            else:
+                                #Turn
+                                self.turn = "b" if self.turn == "w" else "w"
+                                self.game_over = self.game_status(self.turn)
+                                if self.game_over is not None:
+                                    print(self.game_over)
                             self.minigame = None
             
             if (self.player_color is not None  
@@ -306,6 +311,11 @@ class Chess():
         raw_moves = piece.legal_moves(self.grid)
         legal = []
         for move in raw_moves:
+            # Bug fix to not allow king capture
+            r,c = move
+            target = self.grid[r][c]
+            if target is not None and target.char == "K":
+                continue
             if self.is_king_in_check(piece.position, move, piece.color) is False:
                 legal.append(move)
         if piece.char ==  "P" and self.en_passant_target is not None:
@@ -321,7 +331,7 @@ class Chess():
 
     # Computer movement
     def make_ai_move(self):
-        move = greedy_move(self, self.ai_color) 
+        move = minimax_move(self, self.ai_color) 
         if move is None:
             return
         from_square, to_square = move
